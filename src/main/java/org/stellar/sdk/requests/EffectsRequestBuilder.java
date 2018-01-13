@@ -2,21 +2,13 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.InboundEvent;
-import org.glassfish.jersey.media.sse.SseFeature;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.responses.GsonSingleton;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.effects.EffectResponse;
 
 import java.io.IOException;
-import java.net.URI;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -24,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Builds requests connected to effects.
  */
 public class EffectsRequestBuilder extends RequestBuilder {
-  public EffectsRequestBuilder(URI serverURI) {
-    super(serverURI, "effects");
+  public EffectsRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "effects");
   }
 
   /**
@@ -71,19 +63,6 @@ public class EffectsRequestBuilder extends RequestBuilder {
   }
 
   /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link EffectResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link EffectResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<EffectResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<EffectResponse>>() {};
-    ResponseHandler<Page<EffectResponse>> responseHandler = new ResponseHandler<Page<EffectResponse>>(type);
-    return (Page<EffectResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
-  }
-
-  /**
    * Allows to stream SSE events from horizon.
    * Certain endpoints in Horizon can be called in streaming mode using Server-Sent Events.
    * This mode will keep the connection to horizon open and horizon will continue to return
@@ -93,6 +72,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
    * @param listener {@link EventListener} implementation with {@link EffectResponse} type
    * @return EventSource object, so you can <code>close()</code> connection when not needed anymore
    */
+  /*
   public EventSource stream(final EventListener<EffectResponse> listener) {
     Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
     WebTarget target = client.target(this.buildUri());
@@ -108,7 +88,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
       }
     };
     return eventSource;
-  }
+  }*/
 
   /**
    * Build and execute request.
@@ -117,7 +97,19 @@ public class EffectsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public Page<EffectResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return execute(buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link EffectResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link EffectResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<EffectResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<EffectResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override

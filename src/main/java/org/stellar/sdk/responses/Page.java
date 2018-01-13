@@ -1,14 +1,6 @@
 package org.stellar.sdk.responses;
 
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
-
-import org.apache.http.client.fluent.Request;
-import org.stellar.sdk.requests.ResponseHandler;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 /**
@@ -29,21 +21,6 @@ public class Page<T> extends Response {
 
   public Links getLinks() {
     return links;
-  }
-
-  /**
-   * @return The next page of results or null when there is no more results
-   * @throws URISyntaxException
-   * @throws IOException
-   */
-  public Page<T> getNextPage() throws URISyntaxException, IOException {
-    if (this.getLinks().getNext() == null) {
-      return null;
-    }
-    TypeToken type = new TypeToken<Page<T>>() {};
-    ResponseHandler<Page<T>> responseHandler = new ResponseHandler<Page<T>>(type);
-    URI uri = new URI(this.getLinks().getNext().getHref());
-    return (Page<T>) Request.Get(uri).execute().handleResponse(responseHandler);
   }
 
   /**

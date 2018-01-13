@@ -2,28 +2,20 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.InboundEvent;
-import org.glassfish.jersey.media.sse.SseFeature;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.AccountResponse;
-import org.stellar.sdk.responses.GsonSingleton;
 import org.stellar.sdk.responses.Page;
 
 import java.io.IOException;
-import java.net.URI;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 
 /**
  * Builds requests connected to accounts.
  */
 public class AccountsRequestBuilder extends RequestBuilder {
-  public AccountsRequestBuilder(URI serverURI) {
-    super(serverURI, "accounts");
+  public AccountsRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "accounts");
   }
 
   /**
@@ -31,10 +23,8 @@ public class AccountsRequestBuilder extends RequestBuilder {
    * This method is helpful for getting the links.
    * @throws IOException
    */
-  public AccountResponse account(URI uri) throws IOException {
-    TypeToken type = new TypeToken<AccountResponse>() {};
-    ResponseHandler<AccountResponse> responseHandler = new ResponseHandler<AccountResponse>(type);
-    return (AccountResponse) Request.Get(uri).execute().handleResponse(responseHandler);
+  public AccountResponse account(HttpUrl url) throws IOException {
+    return get(url, AccountResponse.class);
   }
 
   /**
@@ -45,20 +35,7 @@ public class AccountsRequestBuilder extends RequestBuilder {
    */
   public AccountResponse account(KeyPair account) throws IOException {
     this.setSegments("accounts", account.getAccountId());
-    return this.account(this.buildUri());
-  }
-
-  /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link AccountResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link AccountResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<AccountResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<AccountResponse>>() {};
-    ResponseHandler<Page<AccountResponse>> responseHandler = new ResponseHandler<Page<AccountResponse>>(type);
-    return (Page<AccountResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
+    return this.account(this.buildUrl());
   }
 
   /**
@@ -71,6 +48,7 @@ public class AccountsRequestBuilder extends RequestBuilder {
    * @param listener {@link EventListener} implementation with {@link AccountResponse} type
    * @return EventSource object, so you can <code>close()</code> connection when not needed anymore
    */
+  /*
   public EventSource stream(final EventListener<AccountResponse> listener) {
     Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
     WebTarget target = client.target(this.buildUri());
@@ -86,7 +64,7 @@ public class AccountsRequestBuilder extends RequestBuilder {
       }
     };
     return eventSource;
-  }
+  }*/
 
   /**
    * Build and execute request. <strong>Warning!</strong> {@link AccountResponse}s in {@link Page} will contain only <code>keypair</code> field.
@@ -95,7 +73,19 @@ public class AccountsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public Page<AccountResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return execute(buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link AccountResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link AccountResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<AccountResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<AccountResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override

@@ -32,9 +32,8 @@ repositories {
 }
 
 dependencies {
+    compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'commons-codec:commons-codec:1.11'
-    compile 'org.apache.httpcomponents:httpclient:4.5.4'
-    compile 'org.apache.httpcomponents:fluent-hc:4.5.4'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile 'org.mockito:mockito-core:2.13.0'
     compile 'com.google.guava:guava:18.0'

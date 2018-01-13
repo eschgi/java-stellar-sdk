@@ -2,21 +2,14 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.InboundEvent;
-import org.glassfish.jersey.media.sse.SseFeature;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.responses.GsonSingleton;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
 import java.net.URI;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -24,8 +17,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Builds requests connected to payments.
  */
 public class PaymentsRequestBuilder extends RequestBuilder {
-  public PaymentsRequestBuilder(URI serverURI) {
-    super(serverURI, "payments");
+  public PaymentsRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "payments");
   }
 
   /**
@@ -61,19 +54,6 @@ public class PaymentsRequestBuilder extends RequestBuilder {
   }
 
   /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link OperationResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link OperationResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<OperationResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<OperationResponse>>() {};
-    ResponseHandler<Page<OperationResponse>> responseHandler = new ResponseHandler<Page<OperationResponse>>(type);
-    return (Page<OperationResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
-  }
-
-  /**
    * Allows to stream SSE events from horizon.
    * Certain endpoints in Horizon can be called in streaming mode using Server-Sent Events.
    * This mode will keep the connection to horizon open and horizon will continue to return
@@ -83,6 +63,7 @@ public class PaymentsRequestBuilder extends RequestBuilder {
    * @param listener {@link EventListener} implementation with {@link OperationResponse} type
    * @return EventSource object, so you can <code>close()</code> connection when not needed anymore
    */
+  /*
   public EventSource stream(final EventListener<OperationResponse> listener) {
     Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
     WebTarget target = client.target(this.buildUri());
@@ -98,7 +79,7 @@ public class PaymentsRequestBuilder extends RequestBuilder {
       }
     };
     return eventSource;
-  }
+  }*/
 
   /**
    * Build and execute request.
@@ -107,7 +88,19 @@ public class PaymentsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public Page<OperationResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return this.execute(this.buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link OperationResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link OperationResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<OperationResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<OperationResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override

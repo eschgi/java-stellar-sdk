@@ -2,13 +2,13 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
-import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -16,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Builds requests connected to operations.
  */
 public class OperationsRequestBuilder extends RequestBuilder {
-  public OperationsRequestBuilder(URI serverURI) {
-    super(serverURI, "operations");
+  public OperationsRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "operations");
   }
 
   /**
@@ -25,10 +25,8 @@ public class OperationsRequestBuilder extends RequestBuilder {
    * This method is helpful for getting the links.
    * @throws IOException
    */
-  public OperationResponse operation(URI uri) throws IOException {
-    TypeToken type = new TypeToken<OperationResponse>() {};
-    ResponseHandler<OperationResponse> responseHandler = new ResponseHandler<OperationResponse>(type);
-    return (OperationResponse) Request.Get(uri).execute().handleResponse(responseHandler);
+  public OperationResponse operation(HttpUrl url) throws IOException {
+    return get(url, OperationResponse.class);
   }
 
   /**
@@ -39,7 +37,7 @@ public class OperationsRequestBuilder extends RequestBuilder {
    */
   public OperationResponse operation(long operationId) throws IOException {
     this.setSegments("operation", String.valueOf(operationId));
-    return this.operation(this.buildUri());
+    return this.operation(this.buildUrl());
   }
 
   /**
@@ -75,26 +73,25 @@ public class OperationsRequestBuilder extends RequestBuilder {
   }
 
   /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link OperationResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link OperationResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<OperationResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<OperationResponse>>() {};
-    ResponseHandler<Page<OperationResponse>> responseHandler = new ResponseHandler<Page<OperationResponse>>(type);
-    return (Page<OperationResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
-  }
-
-  /**
    * Build and execute request.
    * @return {@link Page} of {@link OperationResponse}
    * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
    * @throws IOException
    */
   public Page<OperationResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return this.execute(this.buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link OperationResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link OperationResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<OperationResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<OperationResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override

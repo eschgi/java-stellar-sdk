@@ -1,10 +1,12 @@
 package org.stellar.sdk.requests;
 
+import org.stellar.sdk.StellarException;
+
 /**
  * Exception thrown when too many requests were sent to the Horizon server.
  * @see <a href="https://www.stellar.org/developers/horizon/learn/rate-limiting.html" target="_blank">Rate Limiting</a>
  */
-public class TooManyRequestsException extends RuntimeException {
+public class TooManyRequestsException extends StellarException {
   private int retryAfter;
 
   public TooManyRequestsException(int retryAfter) {

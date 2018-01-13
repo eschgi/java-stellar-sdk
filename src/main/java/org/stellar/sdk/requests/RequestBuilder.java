@@ -1,26 +1,35 @@
 package org.stellar.sdk.requests;
 
-import org.apache.http.client.utils.URIBuilder;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+import org.stellar.sdk.ClientProtocolException;
+import org.stellar.sdk.HttpResponseException;
+import org.stellar.sdk.responses.GsonSingleton;
+import org.stellar.sdk.responses.Response;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 /**
  * Abstract class for request builders.
  */
 public abstract class RequestBuilder {
-  protected URIBuilder uriBuilder;
+  private OkHttpClient httpClient;
+  protected HttpUrl.Builder urlBuilder;
   private ArrayList<String> segments;
   private boolean segmentsAdded;
 
-  RequestBuilder(URI serverURI, String defaultSegment) {
-    uriBuilder = new URIBuilder(serverURI);
-    segments = new ArrayList<String>();
+  RequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl, String defaultSegment) {
+    this.httpClient = httpClient;
+    this.urlBuilder = serverUrl.newBuilder();
+    this.segments = new ArrayList<String>();
     if (defaultSegment != null) {
       this.setSegments(defaultSegment);
     }
-    segmentsAdded = false; // Allow overwriting segments
+    this.segmentsAdded = false; // Allow overwriting segments
   }
 
   protected RequestBuilder setSegments(String... segments) {
@@ -29,7 +38,6 @@ public abstract class RequestBuilder {
     }
 
     segmentsAdded = true;
-    // Remove default segments
     this.segments.clear();
     for (String segment : segments) {
       this.segments.add(segment);
@@ -46,7 +54,7 @@ public abstract class RequestBuilder {
    * @param cursor
    */
   public RequestBuilder cursor(String cursor) {
-    uriBuilder.addParameter("cursor", cursor);
+    urlBuilder.addQueryParameter("cursor", cursor);
     return this;
   }
 
@@ -57,7 +65,7 @@ public abstract class RequestBuilder {
    * @param number maxium number of records to return
    */
   public RequestBuilder limit(int number) {
-    uriBuilder.addParameter("limit", String.valueOf(number));
+    urlBuilder.addQueryParameter("limit", String.valueOf(number));
     return this;
   }
 
@@ -66,23 +74,85 @@ public abstract class RequestBuilder {
    * @param direction {@link org.stellar.sdk.requests.RequestBuilder.Order}
    */
   public RequestBuilder order(Order direction) {
-    uriBuilder.addParameter("order", direction.getValue());
+    urlBuilder.addQueryParameter("order", direction.getValue());
     return this;
   }
 
-  URI buildUri() {
-    if (segments.size() > 0) {
-      String path = "";
-      for (String segment : segments) {
-        path += "/"+segment;
+  protected <TResponse> TResponse get(final HttpUrl url,
+                                      final Class<TResponse> classOfResponse) throws IOException {
+    return request(new Request.Builder().url(url).get(), classOfResponse);
+  }
+
+  protected <TResponse> TResponse get(final HttpUrl url,
+                                      final Type typeOfResponse) throws IOException {
+    return request(new Request.Builder().url(url).get(), typeOfResponse);
+  }
+
+  protected <TResponse> TResponse request(final Request.Builder httpRequestBuilder,
+                                          final Class<TResponse> classOfResponse) throws IOException {
+    return request(httpRequestBuilder, classOfResponse, null);
+  }
+
+  protected <TResponse> TResponse request(final Request.Builder httpRequestBuilder,
+                                          final Type typeOfResponse) throws IOException {
+    return request(httpRequestBuilder, null, typeOfResponse);
+  }
+
+  private <TResponse> TResponse request(final Request.Builder httpRequestBuilder,
+                                        final Class<TResponse> classOfResponse,
+                                        final Type typeOfResponse) throws IOException {
+    okhttp3.Request httpRequest = httpRequestBuilder.build();
+    okhttp3.Response httpResponse = httpClient.newCall(httpRequest).execute();
+    if (httpResponse.isSuccessful()) {
+      ResponseBody httpResponseBody = httpResponse.body();
+      if (httpResponseBody == null) {
+        throw new ClientProtocolException("Response contains no content");
       }
-      uriBuilder.setPath(path);
+
+      String json = httpResponseBody.string();
+
+      /*
+       * "Generics on a type are typically erased at runtime, except when the type is compiled with the
+       * generic parameter bound. In that case, the compiler inserts the generic type information into
+       * the compiled class. In other cases, that is not possible."
+       * More info: http://stackoverflow.com/a/14506181
+       */
+      TResponse response;
+      if (typeOfResponse != null) {
+        response = GsonSingleton.getInstance().fromJson(json, typeOfResponse);
+      } else {
+        response = GsonSingleton.getInstance().fromJson(json, classOfResponse);
+      }
+
+      if (response instanceof Response) {
+        ((Response) response).setHeaders(httpResponse.headers());
+      }
+
+      return response;
+    } else {
+      int statusCode = httpResponse.code();
+
+      // Too Many Requests
+      if (statusCode == 429) {
+        String retryAfterValue = httpResponse.header("Retry-After");
+        if (retryAfterValue != null) {
+          int retryAfter = Integer.parseInt(retryAfterValue);
+          throw new TooManyRequestsException(retryAfter);
+        } else {
+          throw new TooManyRequestsException(0);
+        }
+      }
+
+      String statusMessage = httpResponse.message();
+      throw new HttpResponseException(statusCode, statusMessage);
     }
-    try {
-      return uriBuilder.build();
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
+  }
+
+  HttpUrl buildUrl() {
+    for (String segment : this.segments) {
+      this.urlBuilder.addPathSegment(segment);
     }
+    return urlBuilder.build();
   }
 
   /**

@@ -2,13 +2,13 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.OfferResponse;
 import org.stellar.sdk.responses.Page;
 
 import java.io.IOException;
-import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -16,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Builds requests connected to offers.
  */
 public class OffersRequestBuilder extends RequestBuilder {
-  public OffersRequestBuilder(URI serverURI) {
-    super(serverURI, "offers");
+  public OffersRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "offers");
   }
 
   /**
@@ -32,26 +32,25 @@ public class OffersRequestBuilder extends RequestBuilder {
   }
 
   /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link OfferResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link OfferResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<OfferResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<OfferResponse>>() {};
-    ResponseHandler<Page<OfferResponse>> responseHandler = new ResponseHandler<Page<OfferResponse>>(type);
-    return (Page<OfferResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
-  }
-
-  /**
    * Build and execute request.
    * @return {@link Page} of {@link OfferResponse}
    * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
    * @throws IOException
    */
   public Page<OfferResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return this.execute(this.buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link OfferResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link OfferResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<OfferResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<OfferResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override

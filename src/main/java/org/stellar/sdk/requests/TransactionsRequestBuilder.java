@@ -2,21 +2,13 @@ package org.stellar.sdk.requests;
 
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.client.fluent.Request;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.InboundEvent;
-import org.glassfish.jersey.media.sse.SseFeature;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.responses.GsonSingleton;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
 
 import java.io.IOException;
-import java.net.URI;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -24,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Builds requests connected to transactions.
  */
 public class TransactionsRequestBuilder extends RequestBuilder {
-  public TransactionsRequestBuilder(URI serverURI) {
-    super(serverURI, "transactions");
+  public TransactionsRequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl) {
+    super(httpClient, serverUrl, "transactions");
   }
 
   /**
@@ -33,10 +25,8 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    * This method is helpful for getting the links.
    * @throws IOException
    */
-  public TransactionResponse transaction(URI uri) throws IOException {
-    TypeToken type = new TypeToken<TransactionResponse>() {};
-    ResponseHandler<TransactionResponse> responseHandler = new ResponseHandler<TransactionResponse>(type);
-    return (TransactionResponse) Request.Get(uri).execute().handleResponse(responseHandler);
+  public TransactionResponse transaction(HttpUrl url) throws IOException {
+    return get(url, TransactionResponse.class);
   }
 
   /**
@@ -47,7 +37,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    */
   public TransactionResponse transaction(String transactionId) throws IOException {
     this.setSegments("transactions", transactionId);
-    return this.transaction(this.buildUri());
+    return this.transaction(this.buildUrl());
   }
 
   /**
@@ -72,19 +62,6 @@ public class TransactionsRequestBuilder extends RequestBuilder {
   }
 
   /**
-   * Requests specific <code>uri</code> and returns {@link Page} of {@link TransactionResponse}.
-   * This method is helpful for getting the next set of results.
-   * @return {@link Page} of {@link TransactionResponse}
-   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
-   * @throws IOException
-   */
-  public static Page<TransactionResponse> execute(URI uri) throws IOException, TooManyRequestsException {
-    TypeToken type = new TypeToken<Page<TransactionResponse>>() {};
-    ResponseHandler<Page<TransactionResponse>> responseHandler = new ResponseHandler<Page<TransactionResponse>>(type);
-    return (Page<TransactionResponse>) Request.Get(uri).execute().handleResponse(responseHandler);
-  }
-
-  /**
    * Allows to stream SSE events from horizon.
    * Certain endpoints in Horizon can be called in streaming mode using Server-Sent Events.
    * This mode will keep the connection to horizon open and horizon will continue to return
@@ -94,6 +71,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    * @param listener {@link EventListener} implementation with {@link TransactionResponse} type
    * @return EventSource object, so you can <code>close()</code> connection when not needed anymore
    */
+  /*
   public EventSource stream(final EventListener<TransactionResponse> listener) {
     Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
     WebTarget target = client.target(this.buildUri());
@@ -109,7 +87,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
       }
     };
     return eventSource;
-  }
+  }*/
 
   /**
    * Build and execute request.
@@ -118,7 +96,19 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public Page<TransactionResponse> execute() throws IOException, TooManyRequestsException {
-    return this.execute(this.buildUri());
+    return this.execute(this.buildUrl());
+  }
+
+  /**
+   * Requests specific <code>uri</code> and returns {@link Page} of {@link TransactionResponse}.
+   * This method is helpful for getting the next set of results.
+   * @return {@link Page} of {@link TransactionResponse}
+   * @throws TooManyRequestsException when too many requests were sent to the Horizon server.
+   * @throws IOException
+   */
+  public Page<TransactionResponse> execute(HttpUrl url) throws IOException, TooManyRequestsException {
+    TypeToken typeToken = new TypeToken<Page<TransactionResponse>>() {};
+    return get(url, typeToken.getType());
   }
 
   @Override
