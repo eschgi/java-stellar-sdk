@@ -27,7 +27,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
    */
   public EffectsRequestBuilder forAccount(KeyPair account) {
     account = checkNotNull(account, "account cannot be null");
-    this.setSegments("accounts", account.getAccountId(), "effects");
+    this.setPathSegments("accounts", account.getAccountId(), "effects");
     return this;
   }
 
@@ -37,7 +37,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
    * @param ledgerSeq Ledger for which to get effects
    */
   public EffectsRequestBuilder forLedger(long ledgerSeq) {
-    this.setSegments("ledgers", String.valueOf(ledgerSeq), "effects");
+    this.setPathSegments("ledgers", String.valueOf(ledgerSeq), "effects");
     return this;
   }
 
@@ -48,7 +48,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
    */
   public EffectsRequestBuilder forTransaction(String transactionId) {
     transactionId = checkNotNull(transactionId, "transactionId cannot be null");
-    this.setSegments("transactions", transactionId, "effects");
+    this.setPathSegments("transactions", transactionId, "effects");
     return this;
   }
 
@@ -58,7 +58,7 @@ public class EffectsRequestBuilder extends RequestBuilder {
    * @param operationId Operation ID for which to get effects
    */
   public EffectsRequestBuilder forOperation(long operationId) {
-    this.setSegments("operations", String.valueOf(operationId), "effects");
+    this.setPathSegments("operations", String.valueOf(operationId), "effects");
     return this;
   }
 

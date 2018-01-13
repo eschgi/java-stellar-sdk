@@ -19,8 +19,6 @@ public class PathsPageDeserializerTest {
   public void testDeserialize() throws IOException, URISyntaxException {
     Page<PathResponse> pathsPage = GsonSingleton.getInstance().fromJson(json, new TypeToken<Page<PathResponse>>() {}.getType());
 
-    assertNull(pathsPage.getNextPage());
-
     assertEquals(pathsPage.getRecords().get(0).getDestinationAmount(), "20.0000000");
     Assert.assertEquals(pathsPage.getRecords().get(0).getDestinationAsset(), Asset.createNonNativeAsset("EUR", KeyPair.fromAccountId("GDSBCQO34HWPGUGQSP3QBFEXVTSR2PW46UIGTHVWGWJGQKH3AFNHXHXN")));
     assertEquals(pathsPage.getRecords().get(0).getPath().size(), 0);

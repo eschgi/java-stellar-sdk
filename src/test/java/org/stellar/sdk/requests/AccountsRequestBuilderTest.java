@@ -1,5 +1,6 @@
 package org.stellar.sdk.requests;
 
+import okhttp3.HttpUrl;
 import org.junit.Test;
 import org.stellar.sdk.Server;
 
@@ -11,11 +12,11 @@ public class AccountsRequestBuilderTest {
   @Test
   public void testAccounts() {
     Server server = new Server("https://horizon-testnet.stellar.org");
-    URI uri = server.accounts()
+    HttpUrl url = server.accounts()
             .cursor("13537736921089")
             .limit(200)
             .order(RequestBuilder.Order.ASC)
-            .buildUri();
-    assertEquals("https://horizon-testnet.stellar.org/accounts?cursor=13537736921089&limit=200&order=asc", uri.toString());
+            .buildUrl();
+    assertEquals("https://horizon-testnet.stellar.org/accounts?cursor=13537736921089&limit=200&order=asc", url.toString());
   }
 }

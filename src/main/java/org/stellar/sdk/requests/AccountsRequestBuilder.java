@@ -34,7 +34,7 @@ public class AccountsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public AccountResponse account(KeyPair account) throws IOException {
-    this.setSegments("accounts", account.getAccountId());
+    this.setPathSegments("accounts", account.getAccountId());
     return this.account(this.buildUrl());
   }
 

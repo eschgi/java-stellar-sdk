@@ -1,5 +1,6 @@
 package org.stellar.sdk.requests;
 
+import okhttp3.HttpUrl;
 import org.junit.Test;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
@@ -13,10 +14,10 @@ public class OrderBookRequestBuilderTest {
   @Test
   public void testOrderBook() {
     Server server = new Server("https://horizon-testnet.stellar.org");
-    URI uri = server.orderBook()
+    HttpUrl url = server.orderBook()
             .buyingAsset(Asset.createNonNativeAsset("EUR", KeyPair.fromAccountId("GAUPA4HERNBDPVO4IUA3MJXBCRRK5W54EVXTDK6IIUTGDQRB6D5W242W")))
             .sellingAsset(Asset.createNonNativeAsset("USD", KeyPair.fromAccountId("GDRRHSJMHXDTQBT4JTCILNGF5AS54FEMTXL7KOLMF6TFTHRK6SSUSUZZ")))
-            .buildUri();
+            .buildUrl();
 
     assertEquals(
       "https://horizon-testnet.stellar.org/order_book?" +
@@ -25,7 +26,6 @@ public class OrderBookRequestBuilderTest {
       "buying_asset_issuer=GAUPA4HERNBDPVO4IUA3MJXBCRRK5W54EVXTDK6IIUTGDQRB6D5W242W&" +
       "selling_asset_type=credit_alphanum4&" +
       "selling_asset_code=USD&" +
-      "selling_asset_issuer=GDRRHSJMHXDTQBT4JTCILNGF5AS54FEMTXL7KOLMF6TFTHRK6SSUSUZZ",
-      uri.toString());
+      "selling_asset_issuer=GDRRHSJMHXDTQBT4JTCILNGF5AS54FEMTXL7KOLMF6TFTHRK6SSUSUZZ", url.toString());
   }
 }

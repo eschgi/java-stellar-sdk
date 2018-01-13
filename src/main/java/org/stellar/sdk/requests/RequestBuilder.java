@@ -19,28 +19,28 @@ import java.util.ArrayList;
 public abstract class RequestBuilder {
   private OkHttpClient httpClient;
   protected HttpUrl.Builder urlBuilder;
-  private ArrayList<String> segments;
-  private boolean segmentsAdded;
+  private ArrayList<String> pathSegments;
+  private boolean pathSegmentsAdded;
 
-  RequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl, String defaultSegment) {
+  RequestBuilder(OkHttpClient httpClient, HttpUrl serverUrl, String defaultPathSegments) {
     this.httpClient = httpClient;
     this.urlBuilder = serverUrl.newBuilder();
-    this.segments = new ArrayList<String>();
-    if (defaultSegment != null) {
-      this.setSegments(defaultSegment);
+    this.pathSegments = new ArrayList<String>();
+    if (defaultPathSegments != null) {
+      this.setPathSegments(defaultPathSegments.split("/"));
     }
-    this.segmentsAdded = false; // Allow overwriting segments
+    this.pathSegmentsAdded = false; // Allow overwriting path segments
   }
 
-  protected RequestBuilder setSegments(String... segments) {
-    if (segmentsAdded) {
-      throw new RuntimeException("URL segments have been already added.");
+  protected RequestBuilder setPathSegments(String... pathSegments) {
+    if (this.pathSegmentsAdded) {
+      throw new RuntimeException("URL pathSegments have been already added.");
     }
 
-    segmentsAdded = true;
-    this.segments.clear();
-    for (String segment : segments) {
-      this.segments.add(segment);
+    this.pathSegmentsAdded = true;
+    this.pathSegments.clear();
+    for (String segment : pathSegments) {
+      this.pathSegments.add(segment);
     }
 
     return this;
@@ -149,8 +149,8 @@ public abstract class RequestBuilder {
   }
 
   HttpUrl buildUrl() {
-    for (String segment : this.segments) {
-      this.urlBuilder.addPathSegment(segment);
+    for (String segment : this.pathSegments) {
+      urlBuilder.addPathSegment(segment);
     }
     return urlBuilder.build();
   }

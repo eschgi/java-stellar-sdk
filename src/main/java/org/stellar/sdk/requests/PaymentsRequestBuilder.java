@@ -9,7 +9,6 @@ import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
-import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,7 +27,7 @@ public class PaymentsRequestBuilder extends RequestBuilder {
    */
   public PaymentsRequestBuilder forAccount(KeyPair account) {
     account = checkNotNull(account, "account cannot be null");
-    this.setSegments("accounts", account.getAccountId(), "payments");
+    this.setPathSegments("accounts", account.getAccountId(), "payments");
     return this;
   }
 
@@ -38,7 +37,7 @@ public class PaymentsRequestBuilder extends RequestBuilder {
    * @param ledgerSeq Ledger for which to get payments
    */
   public PaymentsRequestBuilder forLedger(long ledgerSeq) {
-    this.setSegments("ledgers", String.valueOf(ledgerSeq), "payments");
+    this.setPathSegments("ledgers", String.valueOf(ledgerSeq), "payments");
     return this;
   }
 
@@ -49,7 +48,7 @@ public class PaymentsRequestBuilder extends RequestBuilder {
    */
   public PaymentsRequestBuilder forTransaction(String transactionId) {
     transactionId = checkNotNull(transactionId, "transactionId cannot be null");
-    this.setSegments("transactions", transactionId, "payments");
+    this.setPathSegments("transactions", transactionId, "payments");
     return this;
   }
 

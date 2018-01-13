@@ -27,7 +27,7 @@ public class OffersRequestBuilder extends RequestBuilder {
    */
   public OffersRequestBuilder forAccount(KeyPair account) {
     account = checkNotNull(account, "account cannot be null");
-    this.setSegments("accounts", account.getAccountId(), "offers");
+    this.setPathSegments("accounts", account.getAccountId(), "offers");
     return this;
   }
 

@@ -33,7 +33,7 @@ public class LedgersRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public LedgerResponse ledger(long ledgerSeq) throws IOException {
-    this.setSegments("ledgers", String.valueOf(ledgerSeq));
+    this.setPathSegments("ledgers", String.valueOf(ledgerSeq));
     return this.ledger(this.buildUrl());
   }
 

@@ -36,7 +36,7 @@ public class OperationsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public OperationResponse operation(long operationId) throws IOException {
-    this.setSegments("operation", String.valueOf(operationId));
+    this.setPathSegments("operation", String.valueOf(operationId));
     return this.operation(this.buildUrl());
   }
 
@@ -47,7 +47,7 @@ public class OperationsRequestBuilder extends RequestBuilder {
    */
   public OperationsRequestBuilder forAccount(KeyPair account) {
     account = checkNotNull(account, "account cannot be null");
-    this.setSegments("accounts", account.getAccountId(), "operations");
+    this.setPathSegments("accounts", account.getAccountId(), "operations");
     return this;
   }
 
@@ -57,7 +57,7 @@ public class OperationsRequestBuilder extends RequestBuilder {
    * @param ledgerSeq Ledger for which to get operations
    */
   public OperationsRequestBuilder forLedger(long ledgerSeq) {
-    this.setSegments("ledgers", String.valueOf(ledgerSeq), "operations");
+    this.setPathSegments("ledgers", String.valueOf(ledgerSeq), "operations");
     return this;
   }
 
@@ -68,7 +68,7 @@ public class OperationsRequestBuilder extends RequestBuilder {
    */
   public OperationsRequestBuilder forTransaction(String transactionId) {
     transactionId = checkNotNull(transactionId, "transactionId cannot be null");
-    this.setSegments("transactions", transactionId, "operations");
+    this.setPathSegments("transactions", transactionId, "operations");
     return this;
   }
 

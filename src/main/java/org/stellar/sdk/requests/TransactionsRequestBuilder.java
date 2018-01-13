@@ -36,7 +36,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    * @throws IOException
    */
   public TransactionResponse transaction(String transactionId) throws IOException {
-    this.setSegments("transactions", transactionId);
+    this.setPathSegments("transactions", transactionId);
     return this.transaction(this.buildUrl());
   }
 
@@ -47,7 +47,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    */
   public TransactionsRequestBuilder forAccount(KeyPair account) {
     account = checkNotNull(account, "account cannot be null");
-    this.setSegments("accounts", account.getAccountId(), "transactions");
+    this.setPathSegments("accounts", account.getAccountId(), "transactions");
     return this;
   }
 
@@ -57,7 +57,7 @@ public class TransactionsRequestBuilder extends RequestBuilder {
    * @param ledgerSeq Ledger for which to get transactions
    */
   public TransactionsRequestBuilder forLedger(long ledgerSeq) {
-    this.setSegments("ledgers", String.valueOf(ledgerSeq), "transactions");
+    this.setPathSegments("ledgers", String.valueOf(ledgerSeq), "transactions");
     return this;
   }
 
